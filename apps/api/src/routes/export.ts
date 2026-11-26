@@ -2,10 +2,10 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { z } from "zod";
 import { computeScorecard } from "@maa/core";
-import { buildDocument } from "../lib/export/content";
-import { renderDocx } from "../lib/export/docx";
-import { renderPdf } from "../lib/export/pdf";
-import { renderXlsx } from "../lib/export/xlsx";
+import { buildDocument } from "@maa/server";
+import { renderDocx } from "@maa/server";
+import { renderPdf } from "@maa/server";
+import { renderXlsx } from "@maa/server";
 import { HttpError } from "../lib/errors";
 import { reportStore } from "../lib/store";
 

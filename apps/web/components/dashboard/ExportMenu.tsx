@@ -2,7 +2,7 @@
 
 import { ChevronDown, Download, FileSpreadsheet, FileText, FileType2, Link2, Loader2, Printer } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { downloadExport } from "@/lib/api";
+import { downloadExport, LOCAL_MODE } from "@/lib/api";
 
 export function ExportMenu({ reportId, hasAnalysis }: { reportId: string; hasAnalysis: boolean }) {
   const [open, setOpen] = useState(false);
@@ -47,7 +47,8 @@ export function ExportMenu({ reportId, hasAnalysis }: { reportId: string; hasAna
     { key: "xlsx", label: "Excel summary", icon: FileSpreadsheet, onClick: () => download("xlsx") },
     { key: "docx", label: "Word report", icon: FileType2, onClick: () => download("docx") },
     { key: "print", label: "Print version", icon: Printer, onClick: () => window.open(`/reports/${reportId}/print`, "_blank", "noopener") },
-    { key: "link", label: "Copy shareable link", icon: Link2, onClick: copyLink },
+    // Reports saved in the browser can't be opened from another device, so there's no share link.
+    ...(LOCAL_MODE ? [] : [{ key: "link", label: "Copy shareable link", icon: Link2, onClick: copyLink }]),
   ];
 
   return (

@@ -1,5 +1,5 @@
 import { computeScorecard, type AnalysisResult, type ReportData, type Score } from "@maa/core";
-import { config } from "../../config";
+import { aiConfig as config } from "../aiConfig";
 import { chatCompletion, parseJsonReply } from "./client";
 import { buildReportContext } from "./context";
 import { CONSULTANT_SYSTEM_PROMPT, CREATIVE_AUDIENCE_TASK, OVERVIEW_TASK, RECOMMENDATIONS_TASK, reportMessage } from "./prompts";

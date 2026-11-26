@@ -1,4 +1,4 @@
-import { config } from "../../config";
+import { aiConfig as config } from "../aiConfig";
 import { HttpError } from "../errors";
 
 export interface ChatMessage {

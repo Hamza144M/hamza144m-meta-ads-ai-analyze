@@ -4,7 +4,7 @@ import { z } from "zod";
 import { isValidCurrency, type ReportData } from "@maa/core";
 import { config } from "../config";
 import { HttpError } from "../lib/errors";
-import { parseReportFile } from "../lib/parseFile";
+import { parseReportFile } from "@maa/server";
 import { reportStore } from "../lib/store";
 
 const upload = multer({

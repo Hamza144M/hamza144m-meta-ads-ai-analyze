@@ -20,6 +20,7 @@ Upload a Meta Ads Manager export (CSV or XLSX) and get an instant performance da
 - **apps/web**: Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 3, Recharts 3, next-themes, lucide-react, Firebase Auth
 - **apps/api**: Node.js + Express 5, Multer, csv-parse, ExcelJS, PDFKit, docx, Zod, Helmet, rate limiting, Firebase Admin, Supabase JS
 - **packages/core**: shared types, Meta column mapping, metric calculations, KPI scoring (used by API and web)
+- **packages/server**: file parsing, AI client and prompts, PDF/Word/Excel exports (used by the API and by the web app's `/api/local` routes)
 - **supabase/schema.sql**: database schema (used when `SUPABASE_URL` is set; otherwise reports are kept in memory)
 - **AI**: any OpenAI-compatible Chat Completions endpoint, configured with `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`
 
@@ -33,16 +34,15 @@ meta-ads-ai-analyzer/
 │   │       ├── routes/      reports, analysis, chat, export
 │   │       ├── middleware/  auth (Firebase ID tokens)
 │   │       └── lib/
-│   │           ├── parseFile.ts   CSV / XLSX → table
-│   │           ├── store/         memory + Supabase
-│   │           ├── ai/            client, prompts, context, schema, analyze, chat, rule-based fallback
-│   │           └── export/        content blocks → pdf, docx, xlsx
+│   │           └── store/         memory + Supabase
 │   └── web/                 Next.js app
 │       ├── app/             /, /upload, /login, /reports, /reports/[id], /reports/[id]/print, /privacy, /terms
+│       │   └── api/local/   parse, analysis, chat, export (used when NEXT_PUBLIC_API_URL is unset)
 │       ├── components/      landing/, upload/, dashboard/, analysis/, chat/, auth/, ui/
-│       ├── lib/             api client, firebase, metric formatting
+│       ├── lib/             api client, browser report storage, firebase, metric formatting
 │       └── public/samples/meta-ads-sample.csv
 ├── packages/core/           analyzeTable(), column aliases, deriveMetrics(), computeScorecard(), types, tests
+├── packages/server/         parseFile, ai/ (client, prompts, analyze, chat, rule-based), export/ (pdf, docx, xlsx)
 ├── supabase/schema.sql
 ├── docs/                    DEPLOYMENT.md, ASSUMPTIONS.md
 └── scripts/                 dev runner, sample data generator
@@ -58,6 +58,8 @@ cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env.local
 npm run dev          # API on :4000, web on :3000
 ```
+
+If `NEXT_PUBLIC_API_URL` is empty, the web app runs on its own (no API needed): files are processed by its `/api/local` routes and reports are saved in the browser. This is how a Vercel-only deployment works.
 
 Open http://localhost:3000, then click **Try a sample report** or drop your own export on `/upload`.
 
@@ -119,7 +121,7 @@ See [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md) for how columns are matched and c
 
 ## Deploying
 
-See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Supabase, Firebase, AI provider, API (Docker) and Vercel setup, plus a launch checklist.
+The quickest option is Vercel only: import the repo, set Root Directory to `apps/web`, and leave `NEXT_PUBLIC_API_URL` unset. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for that, and for Supabase, Firebase, AI provider, API (Docker) and Vercel setup, plus a launch checklist.
 
 ## Security notes
 

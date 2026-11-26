@@ -8,7 +8,7 @@
     "apps/*"
   ],
   "scripts": {
-    "build:core": "npm run build -w @maa/core",
+    "build:core": "npm run build -w @maa/core && npm run build -w @maa/server",
     "dev": "npm run build:core && npm run dev:all",
     "dev:all": "node scripts/dev.mjs",
     "dev:api": "npm run dev -w @maa/api",

@@ -1,5 +1,21 @@
 # Deployment guide
 
+## Quick start: Vercel only
+
+The website works on its own, with no separate API server:
+
+1. Import the GitHub repository in Vercel.
+2. Set **Root Directory** to `apps/web` and keep the Next.js framework preset.
+3. Leave `NEXT_PUBLIC_API_URL` **unset** (delete it if you added it earlier).
+4. Optional: add `AI_API_KEY` (and `AI_BASE_URL`, `AI_MODEL` for non-OpenAI providers) for full AI analysis and chat. Without a key you get the built-in rule-based analysis.
+5. Deploy.
+
+In this mode, uploads are parsed by the web app's own `/api/local/*` routes, nothing is stored on the server, and each visitor's reports are kept in their browser (latest 20). Limits: files up to 4 MB (Vercel's request size limit), no shareable links, and reports don't follow a user to another device. AI analysis must finish within the function time limit (60 seconds is requested; the Hobby plan allows up to 60).
+
+For saved reports, share links and accounts, deploy the API as well (below) and set `NEXT_PUBLIC_API_URL`.
+
+## Full setup: web + API
+
 The app has two deployable parts:
 
 | Part       | What it is                         | Suggested host                              |
@@ -79,15 +95,15 @@ On **Netlify**: base directory `apps/web`, build command `npm run build`, and ad
 On **Vercel**:
 
 1. Import the repository in Vercel.
-2. **Root Directory**: `apps/web`. Leave "Include source files outside of the Root Directory" on (the app uses `packages/core`).
-3. Framework preset: Next.js. The default install and build commands work: `prebuild` compiles `packages/core` first.
+2. **Root Directory**: `apps/web`. Leave "Include source files outside of the Root Directory" on (the app uses `packages/core` and `packages/server`).
+3. Framework preset: Next.js. The default install and build commands work: `prebuild` compiles `packages/core` and `packages/server` first.
 4. Environment variables:
 
-| Variable                                                                                                                             | Value                       |
-| ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------- |
-| `NEXT_PUBLIC_API_URL`                                                                                                                | `https://<api-host>`        |
-| `NEXT_PUBLIC_SITE_URL`                                                                                                               | `https://<your web domain>` |
-| `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_APP_ID` | From step 2 (optional)      |
+| Variable                                                                                                                             | Value                                               |
+| ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------- |
+| `NEXT_PUBLIC_API_URL`                                                                                                                | `https://<api-host>`, or unset for Vercel-only mode |
+| `NEXT_PUBLIC_SITE_URL`                                                                                                               | `https://<your web domain>`                         |
+| `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_APP_ID` | From step 2 (optional)                              |
 
 5. Deploy, then add the Vercel domain to the API's `CORS_ORIGIN` and to Firebase's authorized domains.
 

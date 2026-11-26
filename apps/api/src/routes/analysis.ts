@@ -2,7 +2,7 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { z } from "zod";
 import { computeScorecard } from "@maa/core";
-import { generateAnalysis } from "../lib/ai/analyze";
+import { generateAnalysis } from "@maa/server";
 import { HttpError } from "../lib/errors";
 import { reportStore } from "../lib/store";
 

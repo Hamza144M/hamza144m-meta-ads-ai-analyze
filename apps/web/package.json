@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prebuild": "npm run build --prefix ../../packages/core",
+    "prebuild": "npm run build --prefix ../../packages/server",
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start -p 3000",
@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@maa/core": "0.1.0",
+    "@maa/server": "0.1.0",
     "clsx": "2.1.1",
     "firebase": "11.10.0",
     "lucide-react": "0.468.0",
@@ -19,7 +20,8 @@
     "react": "19.1.10",
     "react-dom": "19.1.10",
     "recharts": "3.11.1",
-    "tailwind-merge": "2.6.2"
+    "tailwind-merge": "2.6.2",
+    "zod": "3.25.76"
   },
   "devDependencies": {
     "@types/node": "22.20.7",

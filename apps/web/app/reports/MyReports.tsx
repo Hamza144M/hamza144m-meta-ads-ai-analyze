@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { formatCurrency } from "@maa/core";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { deleteReport, listReports, type ReportSummary } from "@/lib/api";
+import { deleteReport, listReports, LOCAL_MODE, type ReportSummary } from "@/lib/api";
 
 export function MyReports() {
   const { enabled, user, loading } = useAuth();
@@ -16,8 +16,10 @@ export function MyReports() {
 
   useEffect(() => {
     if (loading) return;
-    if (enabled && !user) return router.replace("/login?next=/reports");
-    if (!enabled) return setReports([]);
+    if (!LOCAL_MODE) {
+      if (enabled && !user) return router.replace("/login?next=/reports");
+      if (!enabled) return setReports([]);
+    }
     listReports()
       .then((r) => setReports(r.reports))
       .catch((e: Error) => setError(e.message));
@@ -33,7 +35,7 @@ export function MyReports() {
     }
   };
 
-  if (!enabled)
+  if (!enabled && !LOCAL_MODE)
     return (
       <p className="card p-6 text-sm text-slate-600 dark:text-slate-400">
         Accounts aren&apos;t enabled on this deployment, so reports aren&apos;t saved to a list. Keep the report link to come back to it.
@@ -58,23 +60,26 @@ export function MyReports() {
     );
 
   return (
-    <ul className="card divide-y divide-slate-100 dark:divide-white/5">
-      {reports.map((r) => (
-        <li key={r.id} className="flex items-center gap-4 p-4">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-400/10 dark:text-brand-400">
-            <FileSpreadsheet className="h-5 w-5" />
-          </span>
-          <Link href={`/reports/${r.id}`} className="min-w-0 flex-1">
-            <p className="truncate font-medium text-slate-900 hover:text-brand-600 dark:text-white">{r.fileName}</p>
-            <p className="text-xs text-slate-500">
-              {new Date(r.createdAt).toLocaleString()} · {formatCurrency(r.spend, r.currency, 0)} spend
-            </p>
-          </Link>
-          <button type="button" onClick={() => void remove(r.id)} className="btn-ghost h-9 w-9 p-0" aria-label={`Delete ${r.fileName}`}>
-            <Trash2 className="h-4 w-4" />
-          </button>
-        </li>
-      ))}
-    </ul>
+    <>
+      {LOCAL_MODE && <p className="mb-3 text-sm text-slate-500">Reports are saved in this browser only. The latest 20 are kept.</p>}
+      <ul className="card divide-y divide-slate-100 dark:divide-white/5">
+        {reports.map((r) => (
+          <li key={r.id} className="flex items-center gap-4 p-4">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-400/10 dark:text-brand-400">
+              <FileSpreadsheet className="h-5 w-5" />
+            </span>
+            <Link href={`/reports/${r.id}`} className="min-w-0 flex-1">
+              <p className="truncate font-medium text-slate-900 hover:text-brand-600 dark:text-white">{r.fileName}</p>
+              <p className="text-xs text-slate-500">
+                {new Date(r.createdAt).toLocaleString()} · {formatCurrency(r.spend, r.currency, 0)} spend
+              </p>
+            </Link>
+            <button type="button" onClick={() => void remove(r.id)} className="btn-ghost h-9 w-9 p-0" aria-label={`Delete ${r.fileName}`}>
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }

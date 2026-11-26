@@ -3,6 +3,7 @@
 import { FolderOpen, LogOut } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { LOCAL_MODE } from "@/lib/api";
 import { useAuth } from "./AuthProvider";
 
 export function UserMenu() {
@@ -15,6 +16,12 @@ export function UserMenu() {
     return () => document.removeEventListener("click", close);
   }, []);
 
+  if (!enabled && LOCAL_MODE)
+    return (
+      <Link href="/reports" className="btn-ghost hidden sm:inline-flex">
+        My reports
+      </Link>
+    );
   if (!enabled || loading) return null;
   if (!user)
     return (

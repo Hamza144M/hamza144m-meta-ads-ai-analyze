@@ -1,0 +1,25 @@
+{
+  "name": "@maa/server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Server-side report parsing, AI analysis and exports, shared by the Express API and the Next.js route handlers.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "prebuild": "npm run build --prefix ../core",
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@maa/core": "0.1.0",
+    "csv-parse": "6.2.1",
+    "docx": "9.16.0",
+    "exceljs": "4.4.0",
+    "pdfkit": "0.17.2",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.7",
+    "@types/pdfkit": "0.17.3",
+    "typescript": "5.9.3"
+  }
+}

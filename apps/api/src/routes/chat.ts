@@ -3,8 +3,8 @@ import rateLimit from "express-rate-limit";
 import { z } from "zod";
 import { computeScorecard } from "@maa/core";
 import { config } from "../config";
-import { CHAT_SYSTEM_PROMPT, chatContextMessage, ruleBasedChatAnswer } from "../lib/ai/chat";
-import { chatCompletionStream } from "../lib/ai/client";
+import { CHAT_SYSTEM_PROMPT, chatContextMessage, ruleBasedChatAnswer } from "@maa/server";
+import { chatCompletionStream } from "@maa/server";
 import { HttpError } from "../lib/errors";
 import { reportStore } from "../lib/store";
 
