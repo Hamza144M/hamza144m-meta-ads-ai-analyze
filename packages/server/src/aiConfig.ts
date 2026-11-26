@@ -7,21 +7,30 @@
  *   isn't configured, and as a backup if Claude is unavailable.
  * - Neither: the built-in rule-based analysis.
  */
+/** Read an env var, dropping spaces, wrapping quotes and stray trailing dots/commas from copy-paste. */
+function env(name: string): string {
+  return (process.env[name] ?? "")
+    .trim()
+    .replace(/^["'`]+|["'`]+$/g, "")
+    .replace(/[.,;]+$/, "")
+    .trim();
+}
+
 export const aiConfig = {
   get ANTHROPIC_API_KEY(): string {
-    return process.env.ANTHROPIC_API_KEY?.trim() || "";
+    return env("ANTHROPIC_API_KEY") || "";
   },
   get ANTHROPIC_MODEL(): string {
-    return process.env.ANTHROPIC_MODEL?.trim() || "claude-opus-5-5";
+    return env("ANTHROPIC_MODEL") || "claude-opus-5-5";
   },
   get AI_BASE_URL(): string {
-    return process.env.AI_BASE_URL?.trim() || "https://api.openai.com/v1";
+    return env("AI_BASE_URL") || "https://api.openai.com/v1";
   },
   get AI_API_KEY(): string {
-    return process.env.AI_API_KEY?.trim() || "";
+    return env("AI_API_KEY") || "";
   },
   get AI_MODEL(): string {
-    return process.env.AI_MODEL?.trim() || "gpt-4o-mini";
+    return env("AI_MODEL") || "gpt-4o-mini";
   },
   get claudeEnabled(): boolean {
     return Boolean(this.ANTHROPIC_API_KEY);

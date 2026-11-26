@@ -57,6 +57,40 @@ export async function chatCompletionStream(
   return openAiCompletionStream(messages, onDelta, opts);
 }
 
+/** Base URL + /chat/completions, whether or not AI_BASE_URL ends with a slash. */
+function completionsUrl(): string {
+  const base = config.AI_BASE_URL.replace(/\/+$/, "");
+  return /\/chat\/completions$/.test(base) ? base : `${base}/chat/completions`;
+}
+
+/** Turn a failed provider response into an error that names the provider's status and message. */
+async function providerError(res: Response): Promise<HttpError> {
+  const raw = await res.text().catch(() => "");
+  console.error(`AI provider error ${res.status}: ${raw.slice(0, 500)}`);
+  let detail = "";
+  try {
+    // OpenAI shape {error:{message}}; Gemini sometimes wraps it in an array.
+    const parsed = JSON.parse(raw) as unknown;
+    const obj = (Array.isArray(parsed) ? parsed[0] : parsed) as { error?: { message?: string } | string; message?: string };
+    detail = typeof obj?.error === "string" ? obj.error : (obj?.error?.message ?? obj?.message ?? "");
+  } catch {
+    detail = raw;
+  }
+  // Never echo anything that looks like a key back to the browser.
+  detail = detail
+    .replace(/\s+/g, " ")
+    .replace(/[A-Za-z0-9_\-.]{30,}/g, "…")
+    .trim()
+    .slice(0, 240);
+  const suffix = ` (${res.status}${detail ? `: ${detail}` : ""})`;
+  if (res.status === 401 || res.status === 403) return new HttpError(502, `The AI provider rejected the API key${suffix}.`, "ai_auth");
+  if (res.status === 429)
+    return new HttpError(429, `The AI provider is rate limiting requests. Try again in a minute${suffix}.`, "ai_rate_limited");
+  if (res.status === 404)
+    return new HttpError(502, `The AI model or URL was not found. Check AI_MODEL and AI_BASE_URL${suffix}.`, "ai_error");
+  return new HttpError(502, `The AI provider returned an error${suffix}.`, "ai_error");
+}
+
 /**
  * Minimal client for any OpenAI-compatible Chat Completions API
  * (OpenAI, Azure OpenAI via proxy, OpenRouter, Together, Groq, Ollama, vLLM, …).
@@ -77,7 +111,7 @@ async function openAiCompletion(messages: ChatMessage[], opts: CompletionOptions
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), opts.timeoutMs ?? 120_000);
     try {
-      return await fetch(`${config.AI_BASE_URL.replace(/\/$/, "")}/chat/completions`, {
+      return await fetch(completionsUrl(), {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${config.AI_API_KEY}` },
         body: JSON.stringify(payload),
@@ -98,14 +132,7 @@ async function openAiCompletion(messages: ChatMessage[], opts: CompletionOptions
     const { response_format: _drop, ...rest } = body;
     res = await send(rest);
   }
-  if (!res.ok) {
-    const detail = await res.text().catch(() => "");
-    console.error(`AI provider error ${res.status}: ${detail.slice(0, 500)}`);
-    if (res.status === 401 || res.status === 403) throw new HttpError(502, "The AI provider rejected the API key.", "ai_auth");
-    if (res.status === 429)
-      throw new HttpError(429, "The AI provider is rate limiting requests. Try again in a minute.", "ai_rate_limited");
-    throw new HttpError(502, "The AI provider returned an error.", "ai_error");
-  }
+  if (!res.ok) throw await providerError(res);
   const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
   const content = data.choices?.[0]?.message?.content;
   if (!content) throw new HttpError(502, "The AI provider returned an empty response.", "ai_empty");
@@ -146,14 +173,14 @@ async function openAiCompletionStream(
   if (!config.openAiEnabled) throw new HttpError(503, "AI is not configured on the server.", "ai_not_configured");
   let res: Response;
   try {
-    res = await fetch(`${config.AI_BASE_URL.replace(/\/$/, "")}/chat/completions`, {
+    res = await fetch(completionsUrl(), {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${config.AI_API_KEY}` },
       body: JSON.stringify({
         model: config.AI_MODEL,
         messages,
         temperature: opts.temperature ?? 0.5,
-        max_tokens: opts.maxTokens ?? 1200,
+        max_tokens: opts.maxTokens ?? 4000,
         stream: true,
       }),
       signal: opts.signal,
@@ -161,12 +188,7 @@ async function openAiCompletionStream(
   } catch {
     throw new HttpError(502, "Couldn't reach the AI provider.", "ai_unreachable");
   }
-  if (!res.ok || !res.body) {
-    console.error(`AI provider error ${res.status}: ${(await res.text().catch(() => "")).slice(0, 500)}`);
-    if (res.status === 429)
-      throw new HttpError(429, "The AI provider is rate limiting requests. Try again in a minute.", "ai_rate_limited");
-    throw new HttpError(502, "The AI provider returned an error.", "ai_error");
-  }
+  if (!res.ok || !res.body) throw await providerError(res);
 
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
