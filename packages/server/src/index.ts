@@ -9,3 +9,4 @@ export { buildDocument } from "./export/content";
 export * from "./export/pdf";
 export * from "./export/docx";
 export * from "./export/xlsx";
+export * from "./ai/creative";

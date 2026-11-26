@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BarChart3, Brain, Filter, Layers, MessageSquare, PiggyBank, Target, FileDown } from "lucide-react";
 
 const FEATURES = [
@@ -14,7 +15,8 @@ const FEATURES = [
   {
     icon: Layers,
     title: "Creative analysis",
-    body: "Spot creative fatigue, weak hooks, and low CTR, then get new hooks, headlines, primary text, and angles to test.",
+    body: "Upload an ad image or video and get scores for the hook, visuals, text, branding and CTA, plus new hooks and headlines to test.",
+    href: "/creative",
   },
   {
     icon: Target,
@@ -53,13 +55,18 @@ export function Features() {
           <p className="section-sub">From a single export file, without connecting your ad account.</p>
         </div>
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {FEATURES.map(({ icon: Icon, title, body }) => (
+          {FEATURES.map(({ icon: Icon, title, body, href }: { icon: typeof BarChart3; title: string; body: string; href?: string }) => (
             <div key={title} className="card group p-6 transition hover:-translate-y-1 hover:shadow-lift">
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-50 text-brand-600 transition group-hover:bg-brand-600 group-hover:text-white dark:bg-brand-400/10 dark:text-brand-400">
                 <Icon className="h-5 w-5" />
               </span>
               <h3 className="mt-5 font-semibold text-slate-900 dark:text-white">{title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">{body}</p>
+              {href && (
+                <Link href={href} className="mt-3 inline-block text-sm font-semibold text-brand-600 hover:underline dark:text-brand-400">
+                  Analyze a creative →
+                </Link>
+              )}
             </div>
           ))}
         </div>

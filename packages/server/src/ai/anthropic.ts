@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { aiConfig } from "../aiConfig";
 import { HttpError } from "../errors";
-import type { ChatMessage, CompletionOptions } from "./client";
+import type { ChatMessage, CompletionOptions, ContentPart } from "./client";
 
 /**
  * Claude (Anthropic) provider. Used for the AI analysis and the "Ask AI" chat
@@ -16,16 +16,29 @@ function getClient(): Anthropic {
 // If a request is declined by Claude's safety checks, the API re-runs it on Anthropic's recommended fallback model.
 const FALLBACK_BETA = "server-side-fallback-2026-07-01";
 
+type ImageMediaType = "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+
+/** Convert a text or data-URL image part to a Claude content block. */
+function toClaudePart(part: ContentPart): Anthropic.Beta.BetaContentBlockParam {
+  if (part.type === "text") return { type: "text", text: part.text };
+  const match = /^data:(image\/(?:jpeg|png|gif|webp));base64,(.+)$/.exec(part.image_url.url);
+  if (!match) throw new HttpError(400, "Images must be JPEG, PNG, GIF or WebP.", "invalid_image");
+  return { type: "image", source: { type: "base64", media_type: match[1] as ImageMediaType, data: match[2] } };
+}
+
 /** Split our provider-neutral messages into Claude's top-level system blocks and user/assistant turns. */
 function toClaude(messages: ChatMessage[]) {
   const system: Anthropic.Beta.BetaTextBlockParam[] = messages
     .filter((m) => m.role === "system")
-    .map((m) => ({ type: "text" as const, text: m.content }));
+    .map((m) => ({ type: "text" as const, text: typeof m.content === "string" ? m.content : "" }));
   // Cache the system prompt + report context: it is identical across chat turns and analysis tasks.
   if (system.length) system[system.length - 1].cache_control = { type: "ephemeral" };
   const turns: Anthropic.Beta.BetaMessageParam[] = messages
     .filter((m) => m.role !== "system")
-    .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
+    .map((m) => ({
+      role: m.role as "user" | "assistant",
+      content: typeof m.content === "string" ? m.content : m.content.map(toClaudePart),
+    }));
   return { system, turns };
 }
 

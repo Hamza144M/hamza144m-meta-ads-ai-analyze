@@ -8,6 +8,7 @@ const COLUMNS = [
       { label: "Features", href: "/#features" },
       { label: "Pricing", href: "/pricing" },
       { label: "Upload report", href: "/upload" },
+      { label: "Ad creative analysis", href: "/creative" },
     ],
   },
   {

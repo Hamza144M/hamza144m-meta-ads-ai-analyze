@@ -1,4 +1,6 @@
 import { computeScorecard, type Score, type StoredAnalysis, type StoredReport } from "@maa/core";
+import type { CreativeAnalysisOutput } from "@maa/server";
+import type { PreparedCreative } from "./creative";
 import { authHeader } from "./firebase";
 import { isLocalId, localDelete, localGet, localList, localSave, newLocalId } from "./localStore";
 
@@ -280,4 +282,17 @@ export async function registerProfile(name?: string): Promise<Account | null> {
     body: JSON.stringify({ name: name || undefined }),
   }).catch(() => null);
   return res?.ok ? ((await res.json()) as Account) : null;
+}
+
+export interface CreativeContext {
+  product?: string;
+  objective?: string;
+  audience?: string;
+  headline?: string;
+  primaryText?: string;
+}
+
+/** AI review of an ad creative (frames prepared in the browser by lib/creative.ts). */
+export function analyzeCreative(prepared: PreparedCreative, context: CreativeContext): Promise<CreativeAnalysisOutput> {
+  return localRequest<CreativeAnalysisOutput>("/api/local/creative", jsonInit({ ...prepared, context }));
 }
