@@ -2,12 +2,9 @@ import { aiConfig as config } from "../aiConfig";
 import { HttpError } from "../errors";
 import { claudeCompletion, claudeCompletionStream, isProviderOutage } from "./anthropic";
 
-/** Text, or an image given as a data URL (OpenAI-compatible "image_url" part). */
-export type ContentPart = { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } };
-
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
-  content: string | ContentPart[];
+  content: string;
 }
 
 export interface CompletionOptions {

@@ -69,8 +69,8 @@ export function Hero() {
             <Link href="/upload" className="btn-primary h-12 px-6 text-base">
               <Upload className="h-4 w-4" /> Upload Your Meta Ads Report
             </Link>
-            <Link href="/targeting" className="btn-secondary h-12 px-6 text-base">
-              Find your target audience <ArrowRight className="h-4 w-4" />
+            <Link href="/upload?sample=1" className="btn-secondary h-12 px-6 text-base">
+              Try a sample report <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
           <ul className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-slate-600 lg:justify-start dark:text-slate-400">

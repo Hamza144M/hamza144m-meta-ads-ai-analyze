@@ -1,17 +1,6 @@
 "use client";
 
-import {
-  AlertCircle,
-  BarChart3,
-  Brain,
-  Crosshair,
-  CalendarDays,
-  FileSpreadsheet,
-  ListChecks,
-  MessageSquare,
-  RefreshCw,
-  Upload,
-} from "lucide-react";
+import { AlertCircle, BarChart3, Brain, CalendarDays, FileSpreadsheet, ListChecks, MessageSquare, RefreshCw, Upload } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import type { Score, StoredAnalysis, StoredReport } from "@maa/core";
@@ -19,7 +8,6 @@ import { ActionPlan } from "@/components/analysis/ActionPlan";
 import { ANALYSIS_SECTIONS, AnalysisView } from "@/components/analysis/AnalysisView";
 import { GeneratePanel } from "@/components/analysis/GeneratePanel";
 import { ChatPanel } from "@/components/chat/ChatPanel";
-import { TargetingView } from "@/components/targeting/TargetingView";
 import { generateAnalysis, getAnalysis, getReport } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { BreakdownChart } from "./BreakdownChart";
@@ -55,10 +43,9 @@ function Skeleton() {
   );
 }
 
-type Tab = "dashboard" | "targeting" | "analysis" | "plan" | "chat";
+type Tab = "dashboard" | "analysis" | "plan" | "chat";
 const TABS: { value: Tab; label: string; icon: typeof BarChart3 }[] = [
   { value: "dashboard", label: "Dashboard", icon: BarChart3 },
-  { value: "targeting", label: "Targeting", icon: Crosshair },
   { value: "analysis", label: "AI analysis", icon: Brain },
   { value: "plan", label: "Action plan", icon: ListChecks },
   { value: "chat", label: "Ask AI", icon: MessageSquare },
@@ -81,7 +68,7 @@ export function ReportDashboard({ id }: { id: string }) {
 
   useEffect(() => {
     const h = location.hash.slice(1);
-    if (h === "targeting" || h === "analysis" || h === "plan" || h === "chat") setTabState(h);
+    if (h === "analysis" || h === "plan" || h === "chat") setTabState(h);
     let cancelled = false;
     getReport(id)
       .then(({ report }) => !cancelled && setReport(report))
@@ -233,7 +220,6 @@ export function ReportDashboard({ id }: { id: string }) {
       )}
       {tab === "plan" && analysis && !generating && <ActionPlan analysis={analysis} />}
       {tab === "chat" && <ChatPanel reportId={id} />}
-      {tab === "targeting" && <TargetingView report={d} />}
 
       {tab === "dashboard" && (
         <div className="space-y-6">
