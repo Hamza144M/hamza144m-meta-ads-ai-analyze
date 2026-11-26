@@ -12,7 +12,9 @@ The website works on its own, with no separate API server:
 
 In this mode, uploads are parsed by the web app's own `/api/local/*` routes, nothing is stored on the server, and each visitor's reports are kept in their browser (latest 20). Limits: files up to 4 MB (Vercel's request size limit), no shareable links, and reports don't follow a user to another device. AI analysis must finish within the function time limit (60 seconds is requested; the Hobby plan allows up to 60).
 
-For saved reports, share links and accounts, deploy the API as well (below) and set `NEXT_PUBLIC_API_URL`.
+To require sign-up and give free users 3 audits per day (with paid plans unlocked by Lemon Squeezy), add the Firebase, Supabase and Lemon Squeezy keys listed in [LAUNCH.md](LAUNCH.md).
+
+For saved reports and share links, deploy the API as well (below) and set `NEXT_PUBLIC_API_URL`.
 
 ## Full setup: web + API
 

@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { computeScorecard } from "@maa/core";
 import { aiConfig, CHAT_SYSTEM_PROMPT, chatCompletionStream, chatContextMessage, ruleBasedChatAnswer } from "@maa/server";
+import { requireUser } from "@/lib/server/auth";
+import { consumeUsage } from "@/lib/server/quota";
 import { analysisSchema, errorResponse, handleError, parseBody, rateLimited, readJson, reportDataSchema } from "@/lib/server/route";
 
 export const runtime = "nodejs";
@@ -21,7 +23,9 @@ const bodySchema = z.object({
 export async function POST(req: Request) {
   try {
     if (rateLimited(req, "chat", 120)) return errorResponse(429, "Too many questions this hour. Please try again later.", "rate_limited");
+    const user = await requireUser(req);
     const { data, analysis, messages } = parseBody(bodySchema, await readJson(req));
+    await consumeUsage(user, "chats");
     const history = messages.slice(-12);
     const headers = { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-cache, no-transform" };
 

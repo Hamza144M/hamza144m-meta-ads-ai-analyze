@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { Logo } from "@/components/ui/Logo";
 import { LoginForm } from "./LoginForm";
 
-export const metadata: Metadata = { title: "Sign in", robots: { index: false, follow: true } };
+export const metadata: Metadata = { title: "Log in", robots: { index: false, follow: true } };
 
 export default function LoginPage() {
   return (
@@ -14,7 +14,7 @@ export default function LoginPage() {
         </div>
         <div className="card mt-8 p-6 sm:p-8">
           <h1 className="text-center text-xl font-bold text-slate-900 dark:text-white">Welcome back</h1>
-          <p className="mb-6 mt-1 text-center text-sm text-slate-500">Sign in to save reports and come back to them anytime.</p>
+          <p className="mb-6 mt-1 text-center text-sm text-slate-500">Log in to run your audits and see your plan.</p>
           <Suspense>
             <LoginForm />
           </Suspense>

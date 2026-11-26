@@ -6,8 +6,10 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   sendPasswordResetEmail,
+  updateProfile,
 } from "firebase/auth";
 import { AlertCircle, Loader2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -23,21 +25,26 @@ function friendly(code: string): string {
   return "Something went wrong. Please try again.";
 }
 
-export function LoginForm() {
-  const { enabled, user } = useAuth();
+export function LoginForm({ mode = "signin" }: { mode?: "signin" | "signup" }) {
+  const { enabled, user, refreshAccount } = useAuth();
   const router = useRouter();
-  const next = useSearchParams().get("next") || "/reports";
-  const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/reports";
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const params = useSearchParams();
+  const fallback = mode === "signup" ? "/upload" : "/reports";
+  const next = params.get("next") || fallback;
+  const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : fallback;
+  const nextQuery = params.get("next") ? `?next=${encodeURIComponent(safeNext)}` : "";
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
 
+  const [created, setCreated] = useState(mode !== "signup");
   useEffect(() => {
-    if (user) router.replace(safeNext);
-  }, [user, router, safeNext]);
+    // After sign-up, wait until the name is saved before leaving the page.
+    if (user && created) router.replace(safeNext);
+  }, [user, created, router, safeNext]);
 
   if (!enabled) {
     return (
@@ -63,9 +70,14 @@ export function LoginForm() {
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     const auth = getFirebaseAuth()!;
-    void run(() =>
-      mode === "signin" ? signInWithEmailAndPassword(auth, email, password) : createUserWithEmailAndPassword(auth, email, password),
-    );
+    if (mode === "signin") return void run(() => signInWithEmailAndPassword(auth, email, password));
+    void run(async () => {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      const displayName = name.trim();
+      if (displayName) await updateProfile(cred.user, { displayName });
+      await refreshAccount(displayName || undefined);
+      setCreated(true);
+    }).finally(() => setCreated(true));
   };
 
   return (
@@ -73,7 +85,10 @@ export function LoginForm() {
       <button
         type="button"
         disabled={busy}
-        onClick={() => void run(() => signInWithPopup(getFirebaseAuth()!, new GoogleAuthProvider()))}
+        onClick={() => {
+          setCreated(true);
+          void run(() => signInWithPopup(getFirebaseAuth()!, new GoogleAuthProvider()));
+        }}
         className="btn-secondary h-11 w-full"
       >
         <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden>
@@ -91,6 +106,20 @@ export function LoginForm() {
         <span className="h-px flex-1 bg-slate-200 dark:bg-white/10" /> or <span className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
       </div>
       <form onSubmit={onSubmit} className="space-y-3">
+        {mode === "signup" && (
+          <label className="block">
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Full name</span>
+            <input
+              type="text"
+              required
+              maxLength={100}
+              autoComplete="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="mt-1 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-white/10 dark:bg-white/5"
+            />
+          </label>
+        )}
         <label className="block">
           <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Email</span>
           <input
@@ -121,17 +150,16 @@ export function LoginForm() {
         )}
         {info && <p className="text-sm text-emerald-700 dark:text-emerald-400">{info}</p>}
         <button type="submit" disabled={busy} className="btn-primary h-11 w-full">
-          {busy && <Loader2 className="h-4 w-4 animate-spin" />} {mode === "signin" ? "Sign in" : "Create account"}
+          {busy && <Loader2 className="h-4 w-4 animate-spin" />} {mode === "signin" ? "Log in" : "Create free account"}
         </button>
       </form>
       <div className="flex items-center justify-between text-sm">
-        <button
-          type="button"
+        <Link
+          href={`${mode === "signin" ? "/signup" : "/login"}${nextQuery}`}
           className="font-medium text-brand-600 hover:underline dark:text-brand-400"
-          onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
         >
-          {mode === "signin" ? "Create an account" : "I already have an account"}
-        </button>
+          {mode === "signin" ? "Create a free account" : "I already have an account"}
+        </Link>
         {mode === "signin" && (
           <button
             type="button"

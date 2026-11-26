@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { isValidCurrency } from "@maa/core";
 import { HttpError, parseReportFile } from "@maa/server";
+import { requireUser } from "@/lib/server/auth";
+import { consumeUsage } from "@/lib/server/quota";
 import { errorResponse, handleError, rateLimited } from "@/lib/server/route";
 
 export const runtime = "nodejs";
@@ -13,6 +15,7 @@ const MAX_BYTES = 4 * 1024 * 1024;
 export async function POST(req: Request) {
   try {
     if (rateLimited(req, "parse", 60)) return errorResponse(429, "Too many uploads this hour. Please try again later.", "rate_limited");
+    const user = await requireUser(req);
     const form = await req.formData().catch(() => {
       throw new HttpError(400, "Attach a .csv or .xlsx file.", "missing_file");
     });
@@ -22,6 +25,8 @@ export async function POST(req: Request) {
       throw new HttpError(413, "This file is over 4 MB. Export a shorter date range or fewer columns.", "too_large");
     const fileName = file.name.replace(/[^\w.\- ()]/g, "_").slice(0, 200);
     let data = await parseReportFile(Buffer.from(await file.arrayBuffer()), fileName);
+    // Count the audit only once the file was read successfully.
+    await consumeUsage(user, "audits");
     const currency = form.get("currency");
     if (typeof currency === "string" && currency) {
       const code = currency.trim().toUpperCase();

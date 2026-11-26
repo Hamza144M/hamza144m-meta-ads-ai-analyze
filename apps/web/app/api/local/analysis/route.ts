@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { generateAnalysis } from "@maa/server";
+import { requireUser } from "@/lib/server/auth";
+import { consumeUsage } from "@/lib/server/quota";
 import { errorResponse, handleError, parseBody, rateLimited, readJson, reportDataSchema } from "@/lib/server/route";
 
 export const runtime = "nodejs";
@@ -12,7 +14,9 @@ export async function POST(req: Request) {
   try {
     if (rateLimited(req, "analysis", 20))
       return errorResponse(429, "You've generated a lot of analyses this hour. Please try again later.", "rate_limited");
+    const user = await requireUser(req);
     const { data } = parseBody(z.object({ data: reportDataSchema }), await readJson(req));
+    await consumeUsage(user, "analyses");
     return NextResponse.json(await generateAnalysis(data));
   } catch (err) {
     return handleError(err);

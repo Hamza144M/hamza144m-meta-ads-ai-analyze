@@ -1,14 +1,17 @@
 "use client";
 
-import { AlertCircle, FileSpreadsheet, Loader2, Sparkles, UploadCloud } from "lucide-react";
+import { AlertCircle, FileSpreadsheet, Loader2, Sparkles, UploadCloud, UserPlus } from "lucide-react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type DragEvent } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { CurrencySelect } from "@/components/ui/CurrencySelect";
-import { uploadReport } from "@/lib/api";
+import { LOCAL_MODE, uploadReport } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const ACCEPT = ".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-const MAX_MB = 15;
+// Vercel-only mode is limited by the platform's request size.
+const MAX_MB = LOCAL_MODE ? 4 : 15;
 
 function validate(file: File): string | null {
   const name = file.name.toLowerCase();
@@ -19,7 +22,48 @@ function validate(file: File): string | null {
   return null;
 }
 
+/** Shown instead of the upload box when sign-up is required. */
+function SignupGate() {
+  return (
+    <div className="card flex flex-col items-center px-6 py-14 text-center">
+      <span className="grid h-14 w-14 place-items-center rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-400/10 dark:text-brand-400">
+        <UserPlus className="h-7 w-7" />
+      </span>
+      <p className="mt-5 text-lg font-semibold text-slate-900 dark:text-white">Create a free account to run your audit</p>
+      <p className="mt-1 max-w-md text-sm text-slate-600 dark:text-slate-400">
+        Free accounts get 3 AI audits every day. It takes 30 seconds and no card is needed.
+      </p>
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        <Link href="/signup?next=/upload" className="btn-primary h-11 px-6">
+          Sign up free
+        </Link>
+        <Link href="/login?next=/upload" className="btn-secondary h-11 px-6">
+          Log in
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+/** "2 of 3 free audits left today" line for free accounts. */
+function UsageLine() {
+  const { account } = useAuth();
+  if (!account) return null;
+  if (!account.limits)
+    return <p className="text-center text-sm text-slate-500">{account.plan === "agency" ? "Agency" : "Pro"} plan: unlimited audits.</p>;
+  const left = Math.max(0, account.limits.audits - account.used.audits);
+  return (
+    <p className="text-center text-sm text-slate-500">
+      Free plan: {left} of {account.limits.audits} audits left today.{" "}
+      <Link href="/pricing" className="font-medium text-brand-600 hover:underline dark:text-brand-400">
+        Upgrade for unlimited
+      </Link>
+    </p>
+  );
+}
+
 export function Dropzone() {
+  const { enabled, user, loading, refreshAccount } = useAuth();
   const router = useRouter();
   const params = useSearchParams();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -42,13 +86,14 @@ export function Dropzone() {
       setStatus("uploading");
       try {
         const { id } = await uploadReport(f, currency || undefined);
+        void refreshAccount();
         router.push(`/reports/${id}`);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Upload failed.");
         setStatus("error");
       }
     },
-    [router, currency],
+    [router, currency, refreshAccount],
   );
 
   const trySample = useCallback(async () => {
@@ -79,8 +124,11 @@ export function Dropzone() {
 
   const busy = status === "uploading";
 
+  if (LOCAL_MODE && enabled && !loading && !user) return <SignupGate />;
+
   return (
     <div className="space-y-4">
+      <UsageLine />
       <div
         role="button"
         tabIndex={0}

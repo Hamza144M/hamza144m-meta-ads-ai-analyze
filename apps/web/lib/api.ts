@@ -20,19 +20,31 @@ export class ApiError extends Error {
   }
 }
 
+/** Send the user to sign up, or to the plans, when the server says so. */
+function redirectFor(code: string | undefined): void {
+  if (typeof window === "undefined") return;
+  const here = window.location.pathname + window.location.search;
+  if (code === "limit_reached") window.location.assign("/pricing?reason=limit");
+  else if (code === "auth_required") window.location.assign(`/signup?next=${encodeURIComponent(here)}`);
+}
+
+async function errorFrom(res: Response): Promise<ApiError> {
+  const body = await res.json().catch(() => null);
+  const err = new ApiError(res.status, body?.error?.message ?? `Request failed (${res.status}).`, body?.error?.code);
+  redirectFor(err.code);
+  return err;
+}
+
 async function toJson<T>(res: Response): Promise<T> {
-  const body = res.status === 204 ? null : await res.json().catch(() => null);
-  if (!res.ok) {
-    throw new ApiError(res.status, body?.error?.message ?? `Request failed (${res.status}).`, body?.error?.code);
-  }
-  return body as T;
+  if (!res.ok) throw await errorFrom(res);
+  return (res.status === 204 ? null : await res.json().catch(() => null)) as T;
 }
 
 /** Call this site's own /api/local routes. */
 async function localRequest<T>(path: string, init: RequestInit): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(path, init);
+    res = await fetch(path, { ...init, headers: { ...(init.headers as Record<string, string>), ...(await authHeader()) } });
   } catch {
     throw new ApiError(0, "Can't reach the server. Check your internet connection and try again.");
   }
@@ -127,8 +139,10 @@ export async function askReport(id: string, messages: ChatTurn[], onDelta: (text
   try {
     if (LOCAL_MODE) {
       const entry = requireLocal(id);
+      const init = jsonInit({ data: entry.report.data, analysis: entry.analysis, messages });
       res = await fetch("/api/local/chat", {
-        ...jsonInit({ data: entry.report.data, analysis: entry.analysis, messages }),
+        ...init,
+        headers: { ...(init.headers as Record<string, string>), ...(await authHeader()) },
         signal,
       });
     } else {
@@ -144,10 +158,7 @@ export async function askReport(id: string, messages: ChatTurn[], onDelta: (text
     if (e instanceof ApiError) throw e;
     throw new ApiError(0, "Can't reach the analysis server.");
   }
-  if (!res.ok || !res.body) {
-    const body = await res.json().catch(() => null);
-    throw new ApiError(res.status, body?.error?.message ?? `Request failed (${res.status}).`, body?.error?.code);
-  }
+  if (!res.ok || !res.body) throw await errorFrom(res);
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   for (;;) {
@@ -236,4 +247,37 @@ export async function updateReportSettings(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(settings),
   });
+}
+
+export interface Account {
+  user: { id: string; email: string | null; name: string | null };
+  plan: "starter" | "pro" | "agency";
+  planStatus: string | null;
+  renewsAt: string | null;
+  endsAt: string | null;
+  /** Daily allowance on the free plan; null on paid plans. */
+  limits: { audits: number; analyses: number; chats: number } | null;
+  used: { audits: number; analyses: number; chats: number };
+}
+
+/** The signed-in user's plan and today's usage (Vercel-only mode). */
+export async function getAccount(): Promise<Account | null> {
+  if (!LOCAL_MODE) return null;
+  const headers = await authHeader();
+  if (!headers.Authorization) return null;
+  const res = await fetch("/api/local/me", { headers, cache: "no-store" }).catch(() => null);
+  return res?.ok ? ((await res.json()) as Account) : null;
+}
+
+/** Save the profile (with the name entered at sign-up). */
+export async function registerProfile(name?: string): Promise<Account | null> {
+  if (!LOCAL_MODE) return null;
+  const headers = await authHeader();
+  if (!headers.Authorization) return null;
+  const res = await fetch("/api/local/me", {
+    method: "POST",
+    headers: { ...headers, "Content-Type": "application/json" },
+    body: JSON.stringify({ name: name || undefined }),
+  }).catch(() => null);
+  return res?.ok ? ((await res.json()) as Account) : null;
 }

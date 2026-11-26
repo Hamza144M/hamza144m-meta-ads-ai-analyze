@@ -3,6 +3,7 @@
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { cn } from "@/lib/utils";
 import { Logo } from "./Logo";
@@ -11,11 +12,12 @@ import { ThemeToggle } from "./ThemeToggle";
 const LINKS = [
   { href: "/#features", label: "Features" },
   { href: "/#how-it-works", label: "How it works" },
-  { href: "/#pricing", label: "Pricing" },
+  { href: "/pricing", label: "Pricing" },
   { href: "/#faq", label: "FAQ" },
 ];
 
 export function Navbar() {
+  const auth = useAuth();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -67,6 +69,16 @@ export function Navbar() {
               {l.label}
             </Link>
           ))}
+          {auth.enabled && !auth.loading && !auth.user && (
+            <>
+              <Link href="/login" className="btn-ghost justify-start" onClick={() => setOpen(false)}>
+                Log in
+              </Link>
+              <Link href="/signup" className="btn-secondary mt-2" onClick={() => setOpen(false)}>
+                Sign up free
+              </Link>
+            </>
+          )}
           <Link href="/upload" className="btn-primary mt-2" onClick={() => setOpen(false)}>
             Upload your Meta Ads report
           </Link>

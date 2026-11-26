@@ -1,10 +1,10 @@
-import { Check, CreditCard, Lock } from "lucide-react";
-import Link from "next/link";
+import { Check, Lock } from "lucide-react";
 import { CHECKOUT_URLS, CONTACT_EMAIL } from "@/lib/site";
 import { cn } from "@/lib/utils";
+import { PlanButton } from "./PlanButton";
 
 // ASSUMPTION: placeholder plans and prices. Paid plans open the payment provider's hosted
-// checkout (NEXT_PUBLIC_CHECKOUT_URL_PRO / _AGENCY). Plan limits are not enforced in the app yet.
+// checkout (NEXT_PUBLIC_CHECKOUT_URL_PRO / _AGENCY). Free accounts get 3 audits a day (lib/server/quota.ts).
 export const PLANS = [
   {
     id: "starter",
@@ -12,9 +12,9 @@ export const PLANS = [
     price: 0,
     period: "forever",
     blurb: "Try it on one account.",
-    cta: "Start free",
+    cta: "Sign up free",
     checkout: "",
-    features: ["3 reports / month", "Full dashboard", "AI executive summary", "PDF export"],
+    features: ["3 audits every day", "Full dashboard & KPI scorecard", "AI analysis & action plan", "PDF, Excel & Word exports"],
   },
   {
     id: "pro",
@@ -25,7 +25,7 @@ export const PLANS = [
     cta: "Get Pro",
     popular: true,
     checkout: CHECKOUT_URLS.pro,
-    features: ["Unlimited reports", "Full AI audit & scorecard", "AI chat assistant", "PDF, Excel & Word exports", "Shareable links"],
+    features: ["Unlimited audits", "Unlimited AI analyses", "Unlimited AI chat", "PDF, Excel & Word exports"],
   },
   {
     id: "agency",
@@ -38,13 +38,6 @@ export const PLANS = [
     features: ["Everything in Pro", "Up to 10 team seats", "White-label reports", "Client workspaces", "Priority support"],
   },
 ];
-
-function planLink(p: (typeof PLANS)[number]): { href: string; label: string; external: boolean } {
-  if (p.checkout) return { href: p.checkout, label: p.cta, external: true };
-  if (p.price > 0 && CONTACT_EMAIL)
-    return { href: `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`${p.name} plan`)}`, label: "Contact us", external: true };
-  return { href: "/upload", label: p.price > 0 ? "Start free trial" : p.cta, external: false };
-}
 
 const CARDS = ["Visa", "Mastercard", "Amex"];
 
@@ -64,8 +57,6 @@ export function Pricing() {
         </div>
         <div className="mx-auto mt-14 grid max-w-5xl gap-6 lg:grid-cols-3">
           {PLANS.map((p) => {
-            const link = planLink(p);
-            const className = cn("mt-8 w-full", p.popular ? "btn-primary" : "btn-secondary");
             return (
               <div
                 key={p.id}
@@ -92,15 +83,14 @@ export function Pricing() {
                     </li>
                   ))}
                 </ul>
-                {link.external ? (
-                  <a href={link.href} className={className} rel="noopener">
-                    {p.checkout && <CreditCard className="h-4 w-4" />} {link.label}
-                  </a>
-                ) : (
-                  <Link href={link.href} className={className}>
-                    {link.label}
-                  </Link>
-                )}
+                <PlanButton
+                  planId={p.id}
+                  label={p.cta}
+                  checkout={p.checkout}
+                  contactEmail={CONTACT_EMAIL}
+                  primary={p.popular}
+                  free={p.price === 0}
+                />
                 {p.checkout && <p className="mt-2 text-center text-xs text-slate-500">Pay by card · cancel anytime</p>}
               </div>
             );
