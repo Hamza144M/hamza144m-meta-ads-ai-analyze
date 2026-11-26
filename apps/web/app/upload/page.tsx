@@ -4,7 +4,13 @@ import { Footer } from "@/components/ui/Footer";
 import { Navbar } from "@/components/ui/Navbar";
 import { Dropzone } from "@/components/upload/Dropzone";
 
-export const metadata: Metadata = { title: "Upload report" };
+export const metadata: Metadata = {
+  title: "Upload your Meta Ads report for a free AI audit",
+  description:
+    "Drop a CSV or Excel export from Meta Ads Manager and get an instant KPI dashboard, scorecard and AI recommendations. No Facebook login required.",
+  alternates: { canonical: "/upload" },
+  openGraph: { url: "/upload" },
+};
 
 const TIPS = [
   "In Ads Manager, open Campaigns, Ad sets or Ads and choose your date range.",

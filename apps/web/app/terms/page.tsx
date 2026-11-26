@@ -1,7 +1,11 @@
 import { Footer } from "@/components/ui/Footer";
 import { Navbar } from "@/components/ui/Navbar";
 
-export const metadata = { title: "Terms of Service" };
+export const metadata = {
+  title: "Terms of Service",
+  description: "The terms for using Meta Ads AI Analyzer.",
+  alternates: { canonical: "/terms" },
+};
 
 // Placeholder: replace with your reviewed legal text before launch.
 export default function Page() {

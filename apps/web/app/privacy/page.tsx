@@ -1,7 +1,11 @@
 import { Footer } from "@/components/ui/Footer";
 import { Navbar } from "@/components/ui/Navbar";
 
-export const metadata = { title: "Privacy Policy" };
+export const metadata = {
+  title: "Privacy Policy",
+  description: "How Meta Ads AI Analyzer handles your uploaded reports and personal data.",
+  alternates: { canonical: "/privacy" },
+};
 
 // Placeholder: replace with your reviewed legal text before launch.
 export default function Page() {

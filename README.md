@@ -121,6 +121,8 @@ See [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md) for how columns are matched and c
 
 ## Deploying
 
+For card payments (Lemon Squeezy checkout links) and getting listed on Google, see [docs/LAUNCH.md](docs/LAUNCH.md).
+
 The quickest option is Vercel only: import the repo, set Root Directory to `apps/web`, and leave `NEXT_PUBLIC_API_URL` unset. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for that, and for Supabase, Firebase, AI provider, API (Docker) and Vercel setup, plus a launch checklist.
 
 ## Security notes

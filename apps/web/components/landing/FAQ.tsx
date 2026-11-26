@@ -1,6 +1,6 @@
 import { ChevronDown } from "lucide-react";
 
-const FAQS = [
+export const FAQS = [
   {
     q: "Do I need to connect my Meta ad account?",
     a: "No. You export a report from Ads Manager and upload the file. We never ask for your Meta login or access tokens.",
@@ -15,11 +15,15 @@ const FAQS = [
   },
   {
     q: "Is my data secure?",
-    a: "Files are parsed on our server and only the aggregated metrics are stored. Uploads are sent over HTTPS, and shareable report links use long random IDs. You can delete a report at any time.",
+    a: "Files are sent over HTTPS, read once to calculate your metrics, and the original file is not kept. Only the aggregated numbers are saved so you can reopen the report, and you can delete a report at any time.",
   },
   {
     q: "How accurate is the AI analysis?",
     a: "The AI only reasons over the numbers in your file and shows the metrics behind each recommendation. Treat it like a sharp second opinion: verify big budget moves in Ads Manager.",
+  },
+  {
+    q: "How do I pay, and can I cancel?",
+    a: "Paid plans are billed monthly by card (Visa, Mastercard, Amex and more) through our secure payment provider. Your card details never touch our servers, and you can cancel anytime.",
   },
   { q: "Can I white-label reports for clients?", a: "Yes, on the Agency plan. Exports can carry your logo and colors." },
 ];
