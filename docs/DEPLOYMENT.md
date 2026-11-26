@@ -7,7 +7,7 @@ The website works on its own, with no separate API server:
 1. Import the GitHub repository in Vercel.
 2. Set **Root Directory** to `apps/web` and keep the Next.js framework preset.
 3. Leave `NEXT_PUBLIC_API_URL` **unset** (delete it if you added it earlier).
-4. Optional: add `AI_API_KEY` (and `AI_BASE_URL`, `AI_MODEL` for non-OpenAI providers) for full AI analysis and chat. Without a key you get the built-in rule-based analysis.
+4. Optional: add `ANTHROPIC_API_KEY` so Claude writes the analysis and answers the chat (or `AI_API_KEY`, with `AI_BASE_URL` and `AI_MODEL`, for an OpenAI-compatible provider). Without a key you get the built-in rule-based analysis.
 5. Deploy.
 
 In this mode, uploads are parsed by the web app's own `/api/local/*` routes, nothing is stored on the server, and each visitor's reports are kept in their browser (latest 20). Limits: files up to 4 MB (Vercel's request size limit), no shareable links, and reports don't follow a user to another device. AI analysis must finish within the function time limit (60 seconds is requested; the Hobby plan allows up to 60).
@@ -43,7 +43,14 @@ Supabase (database) and Firebase (authentication) are optional. Without them the
 
 ## 3. AI provider
 
-Pick any OpenAI-compatible provider and set on the API:
+Recommended: Claude. Create a key at console.anthropic.com and set:
+
+```
+ANTHROPIC_API_KEY=<your key>
+ANTHROPIC_MODEL=claude-opus-5-5   # optional; claude-sonnet-5-5 or claude-haiku-5-5 cost less
+```
+
+Or any OpenAI-compatible provider (also used as a backup when both are set):
 
 ```
 AI_BASE_URL=https://api.openai.com/v1
@@ -76,15 +83,16 @@ node apps/api/dist/index.js
 
 ### API environment variables
 
-| Variable                                    | Required        | Notes                                                                                   |
-| ------------------------------------------- | --------------- | --------------------------------------------------------------------------------------- |
-| `PORT`                                      | no              | Defaults to 4000                                                                        |
-| `NODE_ENV`                                  | yes in prod     | `production`                                                                            |
-| `CORS_ORIGIN`                               | yes             | Comma-separated web origins, e.g. `https://app.example.com,https://your-app.vercel.app` |
-| `MAX_UPLOAD_MB`                             | no              | Default 15                                                                              |
-| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | for persistence | From step 1                                                                             |
-| `FIREBASE_SERVICE_ACCOUNT`                  | for accounts    | From step 2                                                                             |
-| `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`     | for AI          | From step 3. Without a key the app uses the rule-based preview                          |
+| Variable                                    | Required        | Notes                                                                                       |
+| ------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------- |
+| `PORT`                                      | no              | Defaults to 4000                                                                            |
+| `NODE_ENV`                                  | yes in prod     | `production`                                                                                |
+| `CORS_ORIGIN`                               | yes             | Comma-separated web origins, e.g. `https://app.example.com,https://your-app.vercel.app`     |
+| `MAX_UPLOAD_MB`                             | no              | Default 15                                                                                  |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | for persistence | From step 1                                                                                 |
+| `FIREBASE_SERVICE_ACCOUNT`                  | for accounts    | From step 2                                                                                 |
+| `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`      | for AI          | From step 3 (Claude, recommended)                                                           |
+| `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`     | optional        | OpenAI-compatible alternative or backup. With no AI key the app uses the rule-based preview |
 
 Check `GET https://<api-host>/api/health`. It reports which storage, AI model and auth mode are active.
 

@@ -38,5 +38,5 @@ export async function generateAnalysis(data: ReportData): Promise<AnalysisOutput
     runTask(context, RECOMMENDATIONS_TASK, (v) => recommendationsSchema.parse(v), 4500),
   ]);
 
-  return { model: config.AI_MODEL, scorecard, result: { ...overview, ...creative, ...recs } as AnalysisResult };
+  return { model: config.activeModel, scorecard, result: { ...overview, ...creative, ...recs } as AnalysisResult };
 }

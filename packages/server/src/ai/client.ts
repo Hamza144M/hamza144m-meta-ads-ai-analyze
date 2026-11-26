@@ -1,16 +1,60 @@
 import { aiConfig as config } from "../aiConfig";
 import { HttpError } from "../errors";
+import { claudeCompletion, claudeCompletionStream, isProviderOutage } from "./anthropic";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
   content: string;
 }
 
-interface CompletionOptions {
+export interface CompletionOptions {
   json?: boolean;
+  /** Claude only: how much reasoning to spend. */
+  effort?: "low" | "medium" | "high";
   maxTokens?: number;
   temperature?: number;
   timeoutMs?: number;
+}
+
+/**
+ * One AI answer. Claude is used when ANTHROPIC_API_KEY is set; if it is unavailable and an
+ * OpenAI-compatible key is also set, that provider answers instead.
+ */
+export async function chatCompletion(messages: ChatMessage[], opts: CompletionOptions = {}): Promise<string> {
+  if (config.claudeEnabled) {
+    try {
+      return await claudeCompletion(messages, opts);
+    } catch (err) {
+      if (!config.openAiEnabled || !isProviderOutage(err)) throw err;
+      console.warn("Claude unavailable, using the OpenAI-compatible backup provider.");
+    }
+  }
+  return openAiCompletion(messages, opts);
+}
+
+/** Streamed answer: Claude first, OpenAI-compatible backup only if nothing was streamed yet. */
+export async function chatCompletionStream(
+  messages: ChatMessage[],
+  onDelta: (text: string) => void,
+  opts: CompletionOptions & { signal?: AbortSignal } = {},
+): Promise<string> {
+  if (config.claudeEnabled) {
+    let streamed = false;
+    try {
+      return await claudeCompletionStream(
+        messages,
+        (t) => {
+          streamed = true;
+          onDelta(t);
+        },
+        opts,
+      );
+    } catch (err) {
+      if (streamed || !config.openAiEnabled || !isProviderOutage(err)) throw err;
+      console.warn("Claude unavailable, using the OpenAI-compatible backup provider.");
+    }
+  }
+  return openAiCompletionStream(messages, onDelta, opts);
 }
 
 /**
@@ -18,8 +62,8 @@ interface CompletionOptions {
  * (OpenAI, Azure OpenAI via proxy, OpenRouter, Together, Groq, Ollama, vLLM, …).
  * Configure with AI_BASE_URL, AI_API_KEY and AI_MODEL.
  */
-export async function chatCompletion(messages: ChatMessage[], opts: CompletionOptions = {}): Promise<string> {
-  if (!config.aiEnabled) throw new HttpError(503, "AI is not configured on the server.", "ai_not_configured");
+async function openAiCompletion(messages: ChatMessage[], opts: CompletionOptions = {}): Promise<string> {
+  if (!config.openAiEnabled) throw new HttpError(503, "AI is not configured on the server.", "ai_not_configured");
 
   const body: Record<string, unknown> = {
     model: config.AI_MODEL,
@@ -91,15 +135,15 @@ export function parseJsonReply(text: string): unknown {
 }
 
 /**
- * Streamed completion. Calls onDelta with each text chunk and resolves with the
- * full text. Uses the standard `stream: true` server-sent-events format.
+ * OpenAI-compatible streamed completion. Calls onDelta with each text chunk and resolves
+ * with the full text. Uses the standard `stream: true` server-sent-events format.
  */
-export async function chatCompletionStream(
+async function openAiCompletionStream(
   messages: ChatMessage[],
   onDelta: (text: string) => void,
   opts: CompletionOptions & { signal?: AbortSignal } = {},
 ): Promise<string> {
-  if (!config.aiEnabled) throw new HttpError(503, "AI is not configured on the server.", "ai_not_configured");
+  if (!config.openAiEnabled) throw new HttpError(503, "AI is not configured on the server.", "ai_not_configured");
   let res: Response;
   try {
     res = await fetch(`${config.AI_BASE_URL.replace(/\/$/, "")}/chat/completions`, {

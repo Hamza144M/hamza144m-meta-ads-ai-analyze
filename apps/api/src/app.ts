@@ -1,3 +1,4 @@
+import { aiConfig } from "@maa/server";
 import cors from "cors";
 import express, { type NextFunction, type Request, type Response } from "express";
 import rateLimit from "express-rate-limit";
@@ -24,7 +25,7 @@ export function createApp() {
     res.json({
       ok: true,
       storage: config.supabaseEnabled ? "supabase" : "memory",
-      ai: config.aiEnabled ? config.AI_MODEL : "rule-based",
+      ai: config.aiEnabled ? aiConfig.activeModel : "rule-based",
       auth: authEnabled(),
     });
   });

@@ -22,7 +22,7 @@ Upload a Meta Ads Manager export (CSV or XLSX) and get an instant performance da
 - **packages/core**: shared types, Meta column mapping, metric calculations, KPI scoring (used by API and web)
 - **packages/server**: file parsing, AI client and prompts, PDF/Word/Excel exports (used by the API and by the web app's `/api/local` routes)
 - **supabase/schema.sql**: database schema (used when `SUPABASE_URL` is set; otherwise reports are kept in memory)
-- **AI**: any OpenAI-compatible Chat Completions endpoint, configured with `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`
+- **AI**: Anthropic Claude via the official `@anthropic-ai/sdk` (`ANTHROPIC_API_KEY`, optional `ANTHROPIC_MODEL`), or any OpenAI-compatible Chat Completions endpoint (`AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`) as an alternative and backup
 
 ```
 meta-ads-ai-analyzer/
@@ -97,9 +97,11 @@ Send `Authorization: Bearer <Firebase ID token>` to associate uploads with a use
 2. Creative analysis (fatigue, hooks, thumbnails, video, CTR, engagement) with new hooks, headlines, primary text, CTAs and angles; audience analysis (interests, broad, lookalikes, retargeting, age, gender, locations)
 3. Top 10 problems, top 10 improvements, quick wins, scaling plan, creative and audience tests, budget strategy, 30-day roadmap
 
-Prompt templates are in `apps/api/src/lib/ai/prompts.ts`. Model replies are validated with lenient Zod schemas (`schema.ts`), so a partial answer still renders. The KPI scorecard is calculated in code (`packages/core/src/scoring.ts`), not by the model, so scores are consistent and explainable.
+Prompt templates are in `packages/server/src/ai/prompts.ts`. Model replies are validated with lenient Zod schemas (`schema.ts`), so a partial answer still renders. The KPI scorecard is calculated in code (`packages/core/src/scoring.ts`), not by the model, so scores are consistent and explainable.
 
-Any OpenAI-compatible provider works, for example:
+**Claude (recommended).** Set `ANTHROPIC_API_KEY` and Claude writes the analysis and answers the "Ask AI" chat (`packages/server/src/ai/anthropic.ts`). The default model is `claude-opus-5-5`; set `ANTHROPIC_MODEL=claude-sonnet-5-5` or `claude-haiku-5-5` to lower the cost per answer. Chat replies stream as they are written (effort `low` for speed), the analysis uses effort `medium`, the report context is prompt-cached across chat turns, and declined requests are retried on Anthropic's recommended fallback model (`fallbacks: "default"`).
+
+**OpenAI-compatible providers.** Used when `ANTHROPIC_API_KEY` is empty, and as an automatic backup when both keys are set and Claude is unavailable (rate limits, outages). For example:
 
 | Provider       | `AI_BASE_URL`                    | `AI_MODEL` example                          |
 | -------------- | -------------------------------- | ------------------------------------------- |
@@ -108,7 +110,7 @@ Any OpenAI-compatible provider works, for example:
 | Groq           | `https://api.groq.com/openai/v1` | any model id it lists                       |
 | Ollama (local) | `http://localhost:11434/v1`      | `llama3.1` (set any non-empty `AI_API_KEY`) |
 
-Without `AI_API_KEY`, the API returns a **rule-based preview** built from the same data, clearly labeled in the UI, so the app is usable for local development and demos.
+Without any AI key, the API returns a **rule-based preview** built from the same data, clearly labeled in the UI, so the app is usable for local development and demos.
 
 ## Getting the best report from Ads Manager
 

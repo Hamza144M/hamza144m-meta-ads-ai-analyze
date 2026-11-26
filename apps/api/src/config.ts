@@ -11,6 +11,8 @@ const schema = z.object({
   AI_BASE_URL: z.string().url().default("https://api.openai.com/v1"),
   AI_API_KEY: z.string().optional(),
   AI_MODEL: z.string().default("gpt-4o-mini"),
+  ANTHROPIC_API_KEY: z.string().optional(),
+  ANTHROPIC_MODEL: z.string().optional(),
   FIREBASE_SERVICE_ACCOUNT: z.string().optional(),
 });
 
@@ -26,5 +28,5 @@ export const config = {
     .map((s) => s.trim())
     .filter(Boolean),
   supabaseEnabled: Boolean(parsed.data.SUPABASE_URL && parsed.data.SUPABASE_SERVICE_ROLE_KEY),
-  aiEnabled: Boolean(parsed.data.AI_API_KEY),
+  aiEnabled: Boolean(parsed.data.AI_API_KEY || parsed.data.ANTHROPIC_API_KEY),
 };

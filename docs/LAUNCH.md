@@ -1,4 +1,4 @@
-# Launch guide: payments, accounts and Google
+# Launch guide: payments, accounts, Claude and Google
 
 This guide follows on from the Vercel-only setup in [DEPLOYMENT.md](DEPLOYMENT.md).
 
@@ -70,13 +70,28 @@ In **Vercel → Project → Settings → Environment Variables**, add these and 
 | `LEMONSQUEEZY_WEBHOOK_SECRET`      | The webhook signing secret from section 1          |
 | `NEXT_PUBLIC_CHECKOUT_URL_PRO`     | Lemon Squeezy Pro checkout link                    |
 | `NEXT_PUBLIC_CHECKOUT_URL_AGENCY`  | Lemon Squeezy Agency checkout link                 |
-| `AI_API_KEY` (optional)            | Your AI provider key, for full AI answers          |
+| `ANTHROPIC_API_KEY`                | Claude key from console.anthropic.com (section 3)  |
 
 Without the Firebase keys the site stays open to everyone with no limit. With Firebase but without Supabase, the limit still works but is only remembered for a short time on each server, so always add Supabase for launch.
 
 To change the free allowance, edit `FREE_LIMITS` in `apps/web/lib/server/quota.ts`.
 
-## 3. SEO built into the site
+## 3. Claude answers your customers
+
+When `ANTHROPIC_API_KEY` is set, Claude writes every AI analysis and answers the "Ask AI" chat, streaming each reply as it is written.
+
+1. Go to console.anthropic.com and sign up or log in.
+2. Open **Settings → Billing** and add credit (pay as you go).
+3. Open **Settings → API Keys → Create Key**, give it a name, and copy the key (it starts with `sk-ant-`). You can only see it once.
+4. In Vercel, add the environment variable `ANTHROPIC_API_KEY` with that key, then redeploy.
+5. Optional: add `ANTHROPIC_MODEL`. The default is `claude-opus-5-5`, the most capable. `claude-sonnet-5-5` costs about half as much, and `claude-haiku-5-5` is far cheaper per answer.
+6. Optional: in **Settings → Limits**, set a monthly spend limit.
+
+Rough cost with the default model: an analysis is 3 requests that each send about 5,000 tokens of report data, and each chat question sends the report again (cached after the first question, which makes follow-ups cheaper). The daily free limits from section 2 cap what free users can spend.
+
+If you also keep an OpenAI-compatible key (`AI_API_KEY`), it is used automatically as a backup when Claude is busy or down.
+
+## 4. SEO built into the site
 
 - A page title, description and canonical URL on every public page. Private pages (reports, login, payment success) are marked `noindex`.
 - Open Graph and Twitter cards with a generated 1200×630 preview image (`/opengraph-image`), so links look good on Facebook, WhatsApp, LinkedIn and X.
@@ -87,7 +102,7 @@ To change the free allowance, edit `FREE_LIMITS` in `apps/web/lib/server/quota.t
 
 Set `NEXT_PUBLIC_SITE_URL` to your final domain (for example `https://metaadsanalyzer.com`) so canonical links and the sitemap use it. On Vercel, the production domain is used automatically when this variable is empty.
 
-## 4. Get listed on Google
+## 5. Get listed on Google
 
 1. Optional but recommended: buy a domain and add it in **Vercel → Project → Settings → Domains**. A real domain looks more trustworthy and is easier to rank than `*.vercel.app`.
 2. Open search.google.com/search-console and click **Add property → URL prefix**. Enter your site URL exactly, for example `https://web-zeta-peach-60.vercel.app/`.

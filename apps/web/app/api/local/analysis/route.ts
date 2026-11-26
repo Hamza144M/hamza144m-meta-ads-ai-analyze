@@ -7,7 +7,8 @@ import { errorResponse, handleError, parseBody, rateLimited, readJson, reportDat
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+// Claude can take a few minutes on a large report (Vercel allows up to 300 s with Fluid compute).
+export const maxDuration = 300;
 
 /** Generate the AI analysis (or the rule-based one when AI_API_KEY isn't set) for report data sent by the browser. */
 export async function POST(req: Request) {
