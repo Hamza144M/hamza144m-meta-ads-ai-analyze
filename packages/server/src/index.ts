@@ -10,3 +10,4 @@ export * from "./export/pdf";
 export * from "./export/docx";
 export * from "./export/xlsx";
 export * from "./ai/creative";
+export * from "./ai/targeting";

@@ -11,8 +11,8 @@ import { ThemeToggle } from "./ThemeToggle";
 
 const LINKS = [
   { href: "/#features", label: "Features" },
+  { href: "/targeting", label: "Targeting" },
   { href: "/creative", label: "Creative AI" },
-  { href: "/#how-it-works", label: "How it works" },
   { href: "/pricing", label: "Pricing" },
   { href: "/#faq", label: "FAQ" },
 ];
