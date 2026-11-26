@@ -1,0 +1,28 @@
+{
+  "name": "meta-ads-ai-analyzer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Upload Meta Ads Manager reports and get an AI-powered analysis with actionable recommendations.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build:core": "npm run build -w @maa/core",
+    "dev": "npm run build:core && npm run dev:all",
+    "dev:all": "node scripts/dev.mjs",
+    "dev:api": "npm run dev -w @maa/api",
+    "dev:web": "npm run dev -w @maa/web",
+    "build": "npm run build -w @maa/api && npm run build -w @maa/web",
+    "test": "npm run build:core && npm run test -w @maa/core",
+    "typecheck": "npm run build:core && npm run typecheck -w @maa/api && npm run typecheck -w @maa/web",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "prettier": "3.10.1"
+  }
+}

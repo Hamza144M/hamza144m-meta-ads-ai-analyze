@@ -1,0 +1,39 @@
+{
+  "name": "@maa/api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Express API: report upload and parsing, storage, AI analysis.",
+  "main": "dist/index.js",
+  "scripts": {
+    "prebuild": "npm run build --prefix ../../packages/core",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@maa/core": "0.1.0",
+    "@supabase/supabase-js": "2.119.2",
+    "cors": "2.8.6",
+    "csv-parse": "6.2.1",
+    "docx": "9.16.0",
+    "dotenv": "16.6.1",
+    "exceljs": "4.4.0",
+    "express": "5.1.0",
+    "express-rate-limit": "8.7.5",
+    "firebase-admin": "13.10.0",
+    "helmet": "8.3.0",
+    "multer": "2.0.2",
+    "pdfkit": "0.17.2",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/cors": "2.8.19",
+    "@types/express": "5.0.6",
+    "@types/multer": "2.0.0",
+    "@types/node": "22.20.7",
+    "@types/pdfkit": "0.17.3",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3"
+  }
+}
