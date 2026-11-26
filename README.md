@@ -110,6 +110,8 @@ Prompt templates are in `packages/server/src/ai/prompts.ts`. Model replies are v
 | Groq           | `https://api.groq.com/openai/v1` | any model id it lists                       |
 | Ollama (local) | `http://localhost:11434/v1`      | `llama3.1` (set any non-empty `AI_API_KEY`) |
 
+Busy or rate-limited answers (HTTP 429/5xx, such as "model is experiencing high demand") are retried automatically with exponential backoff, and `AI_FALLBACK_MODEL` (optional) is tried next. Error messages include the provider's status and reason.
+
 Without any AI key, the API returns a **rule-based preview** built from the same data, clearly labeled in the UI, so the app is usable for local development and demos.
 
 ## Getting the best report from Ads Manager

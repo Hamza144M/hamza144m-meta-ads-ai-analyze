@@ -48,7 +48,7 @@ function toHttpError(err: unknown): HttpError {
 
 /** True for failures worth retrying on the backup (OpenAI-compatible) provider. */
 export function isProviderOutage(err: unknown): boolean {
-  return err instanceof HttpError && ["ai_rate_limited", "ai_timeout", "ai_unreachable", "ai_error"].includes(err.code);
+  return err instanceof HttpError && ["ai_rate_limited", "ai_busy", "ai_timeout", "ai_unreachable", "ai_error"].includes(err.code);
 }
 
 function textOf(message: Anthropic.Beta.BetaMessage): string {

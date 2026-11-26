@@ -32,6 +32,10 @@ export const aiConfig = {
   get AI_MODEL(): string {
     return env("AI_MODEL") || "gpt-4o-mini";
   },
+  /** Optional second model tried when AI_MODEL is overloaded or rate limited (OpenAI-compatible only). */
+  get AI_FALLBACK_MODEL(): string {
+    return env("AI_FALLBACK_MODEL");
+  },
   get claudeEnabled(): boolean {
     return Boolean(this.ANTHROPIC_API_KEY);
   },
