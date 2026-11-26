@@ -106,7 +106,7 @@ On **Vercel**:
 
 1. Import the repository in Vercel.
 2. **Root Directory**: `apps/web`. Leave "Include source files outside of the Root Directory" on (the app uses `packages/core` and `packages/server`).
-3. Framework preset: Next.js. The default install and build commands work: `prebuild` compiles `packages/core` and `packages/server` first.
+3. Framework preset: Next.js. `apps/web/vercel.json` sets the install command (`cd ../.. && npm ci`, which avoids an npm workspace bug in the default command); the default build command works: `prebuild` compiles `packages/core` and `packages/server` first.
 4. Environment variables:
 
 | Variable                                                                                                                             | Value                                               |

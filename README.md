@@ -50,7 +50,7 @@ meta-ads-ai-analyzer/
 
 ## Run locally
 
-Requires Node.js 20+ (22 recommended).
+Requires Node.js 22.
 
 ```bash
 npm install
