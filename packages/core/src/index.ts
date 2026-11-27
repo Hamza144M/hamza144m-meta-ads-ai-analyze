@@ -7,3 +7,4 @@ export * from "./format";
 export * from "./scoring";
 export * from "./analysis";
 export * from "./currency";
+export * from "./compare";
