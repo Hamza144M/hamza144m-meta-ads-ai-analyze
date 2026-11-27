@@ -2,39 +2,33 @@
 
 This guide follows on from the Vercel-only setup in [DEPLOYMENT.md](DEPLOYMENT.md).
 
-## 1. Card payments with Lemon Squeezy
+## 1. Card payments with Creem
 
-Lemon Squeezy accepts sellers from Pakistan and most other countries. Customers pay by card (Visa, Mastercard, Amex), PayPal and more. Lemon Squeezy collects VAT and sales tax for you, and pays you out by bank transfer or PayPal.
+Creem (creem.io) is a "merchant of record": it charges buyers in any country by card, Apple Pay and Google Pay, collects VAT and sales tax for you, and pays you out by bank transfer. It accepts individual sellers from Pakistan (no company needed). Fee: 3.9% + 40¢ per sale, no monthly fee. (Lemon Squeezy no longer accepts new sellers and shuts down on 31 March 2027, so it is only kept for old stores.)
 
-1. Sign up at lemonsqueezy.com, create a store, and complete **Settings → Store activation** (identity check and payout details).
-2. **Products → New product**:
-   - "Pro": pricing **Subscription**, $29, every 1 month.
-   - "Agency": pricing **Subscription**, $99, every 1 month.
-3. In each product, open **Confirmation modal / Redirect**. Set the redirect URL to `https://<your-domain>/billing/success`.
-4. Publish the product, click **Share**, and copy the checkout link (it looks like `https://<store>.lemonsqueezy.com/buy/...`).
-5. In Vercel, open **Project → Settings → Environment Variables** and add:
+1. Sign up at creem.io. You start in **Test mode**, which is free and needs no review.
+2. **Products → Create product**:
+   - "Pro": **Subscription**, $29, monthly.
+   - "Agency": **Subscription**, $99, monthly.
+     Copy each product's ID (it starts with `prod_`).
+3. **Developers → API keys**: copy the API key.
+4. **Developers → Webhooks → Add webhook**: URL `https://<your-domain>/api/billing/webhook`. Copy the webhook secret.
+5. In Vercel, add these environment variables, then redeploy:
 
-| Name                              | Value                                          |
-| --------------------------------- | ---------------------------------------------- |
-| `NEXT_PUBLIC_CHECKOUT_URL_PRO`    | the Pro checkout link                          |
-| `NEXT_PUBLIC_CHECKOUT_URL_AGENCY` | the Agency checkout link                       |
-| `NEXT_PUBLIC_CONTACT_EMAIL`       | optional: used for paid plans with no link yet |
+| Name                   | Value                 |
+| ---------------------- | --------------------- |
+| `CREEM_API_KEY`        | the API key           |
+| `CREEM_WEBHOOK_SECRET` | the webhook secret    |
+| `CREEM_PRODUCT_PRO`    | the Pro product ID    |
+| `CREEM_PRODUCT_AGENCY` | the Agency product ID |
 
-6. Redeploy (**Deployments → … → Redeploy**). These values are built into the page, so a redeploy is needed after every change.
+Test with card `4242 4242 4242 4242`, any future date, any CVC. A test key (`creem_test_…`) uses Creem's test system automatically.
 
-Test first with Lemon Squeezy's **Test mode** (test card `4242 4242 4242 4242`, any future date, any CVC), then switch the store to live.
+To go live: in Creem open **Balance → Payout account**, add your bank account and submit the account review (your site needs visible pricing, Terms, Privacy and a support email; it takes 1 to 3 working days). Then switch Creem to live mode, create the two products again in live mode, and replace the four Vercel values with the live ones.
 
-Other providers work the same way: any hosted checkout link (Paddle, Gumroad, Payoneer, …) can go into these variables.
+When a signed-in user pays, the checkout carries their account id, and the webhook marks them as Pro or Agency. If they cancel, they keep the paid plan until the period they paid for ends. To change someone's plan by hand, edit the `plan` column of the `profiles` table in Supabase. Paid plans need Supabase (section 2) to remember who paid.
 
-### Make payments unlock the paid plan (webhook)
-
-1. In Lemon Squeezy, open **Settings → Webhooks → +**.
-2. Callback URL: `https://<your-domain>/api/billing/webhook`.
-3. Signing secret: type a long random password and keep a copy.
-4. Tick the events `subscription_created`, `subscription_updated`, `subscription_cancelled`, `subscription_resumed`, `subscription_expired`, `subscription_paused` and `subscription_unpaused`, then save.
-5. In Vercel, add `LEMONSQUEEZY_WEBHOOK_SECRET` with the same secret, and redeploy.
-
-When a signed-in user pays, the checkout carries their account id, and the webhook marks them as Pro or Agency. A product whose name contains "Agency" gives the Agency plan; any other product gives Pro. If a subscription is cancelled, the user keeps the paid plan until the period they paid for ends. To change someone's plan by hand, edit the `plan` column of the `profiles` table in Supabase.
+Other providers: any hosted checkout link can go into `NEXT_PUBLIC_CHECKOUT_URL_PRO` / `_AGENCY` instead (used only when the Creem variables are empty). Old Lemon Squeezy stores keep working with `LEMONSQUEEZY_WEBHOOK_SECRET`.
 
 ## 2. Accounts and the 3 free audits per day
 
@@ -67,9 +61,10 @@ In **Vercel → Project → Settings → Environment Variables**, add these and 
 | `NEXT_PUBLIC_FIREBASE_APP_ID`      | Firebase `firebaseConfig.appId`                    |
 | `SUPABASE_URL`                     | Supabase Project URL                               |
 | `SUPABASE_SERVICE_ROLE_KEY`        | Supabase service_role key (secret: never share it) |
-| `LEMONSQUEEZY_WEBHOOK_SECRET`      | The webhook signing secret from section 1          |
-| `NEXT_PUBLIC_CHECKOUT_URL_PRO`     | Lemon Squeezy Pro checkout link                    |
-| `NEXT_PUBLIC_CHECKOUT_URL_AGENCY`  | Lemon Squeezy Agency checkout link                 |
+| `CREEM_API_KEY`                    | Creem API key (section 1)                          |
+| `CREEM_WEBHOOK_SECRET`             | Creem webhook secret (section 1)                   |
+| `CREEM_PRODUCT_PRO`                | Creem Pro product ID (section 1)                   |
+| `CREEM_PRODUCT_AGENCY`             | Creem Agency product ID (section 1)                |
 | `ANTHROPIC_API_KEY`                | Claude key from console.anthropic.com (section 3)  |
 
 Without the Firebase keys the site stays open to everyone with no limit. With Firebase but without Supabase, the limit still works but is only remembered for a short time on each server, so always add Supabase for launch.

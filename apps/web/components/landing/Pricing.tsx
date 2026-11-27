@@ -1,10 +1,12 @@
 import { Check, Lock } from "lucide-react";
+import { creemPlanEnabled } from "@/lib/server/creem";
 import { CHECKOUT_URLS, CONTACT_EMAIL } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { PlanButton } from "./PlanButton";
 
 // ASSUMPTION: placeholder plans and prices. Paid plans open the payment provider's hosted
-// checkout (NEXT_PUBLIC_CHECKOUT_URL_PRO / _AGENCY). Free accounts get 3 audits a day (lib/server/quota.ts).
+// checkout: Creem (CREEM_API_KEY + CREEM_PRODUCT_PRO / _AGENCY) when set, else a hosted link
+// (NEXT_PUBLIC_CHECKOUT_URL_PRO / _AGENCY). Free accounts get 3 audits a day (lib/server/quota.ts).
 export const PLANS = [
   {
     id: "starter",
@@ -24,7 +26,7 @@ export const PLANS = [
     blurb: "For freelancers and growing brands.",
     cta: "Get Pro",
     popular: true,
-    checkout: CHECKOUT_URLS.pro,
+    checkout: creemPlanEnabled("pro") ? "creem" : CHECKOUT_URLS.pro,
     features: ["Unlimited audits", "Unlimited AI analyses", "Unlimited AI chat", "PDF, Excel & Word exports"],
   },
   {
@@ -34,7 +36,7 @@ export const PLANS = [
     period: "/month",
     blurb: "For teams managing many clients.",
     cta: "Get Agency",
-    checkout: CHECKOUT_URLS.agency,
+    checkout: creemPlanEnabled("agency") ? "creem" : CHECKOUT_URLS.agency,
     features: ["Everything in Pro", "Up to 10 team seats", "White-label reports", "Client workspaces", "Priority support"],
   },
 ];
